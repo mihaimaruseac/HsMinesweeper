@@ -1,11 +1,13 @@
-module Plane (Plane, Coords, Value, buildPlane)
+module Plane (Plane, Coords, Value, buildPlane, defuse, safePlane, getTicks)
 where
+
+import Debug.Trace
 
 import Data.Array
 import Data.List
 import System.Random
 
-type Plane = Array Coords Value
+type Plane = (Array Coords Value, Bool)
 type Coords = (Int, Int)
 type Value = Int
 
@@ -31,9 +33,28 @@ placeTickBomb (x, y) = [((x + 1, y), 1),
                         ((x, y - 1), 1),
                         ((x, y), 8)]
 
-buildPlane :: Int -> Int -> Int -> Array Coords Value
-buildPlane size mines seed = accumArray (+) 0 ((0, 0), (size, size)) bombs
+buildPlane :: Int -> Int -> Int -> Plane
+buildPlane size mines seed
+  = (accumArray (+) 0 ((0, 0), (size, size)) bombs, False)
   where
     minePoss = genMines seed mines (size - 1)
     bombs = placeTicks minePoss
+
+defuse :: Plane -> [Coords] -> Plane
+defuse plane positions = (np, planeArray /= np)
+  where
+    np = accum (-) planeArray $ centers ++ ticks
+    planeArray = fst plane
+    max = snd $ snd $ bounds planeArray
+    neighs = concatMap neigh positions
+    neigh (x, y) = filter (\(x,y) -> x >= 0 && x <= max && y >= 0 && y <= max)
+                     [(x-1, y), (x+1, y), (x, y-1), (x, y+1)]
+    centers = map (\x -> (x, 8)) positions
+    ticks = map (\x -> (x, 1)) neighs
+
+safePlane :: Plane -> Bool
+safePlane p = not (snd p) && (null $ filter (/= 0) $ elems (fst p))
+
+getTicks :: Plane -> Coords -> Value
+getTicks p c = (fst p) ! c
 
