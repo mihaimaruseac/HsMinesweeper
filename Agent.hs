@@ -1,5 +1,6 @@
-module Agent (AgentID, Move, AgentState(AS, asPos, asId),
-    WorldState(WS), AgentAction, AgentFunction, dummyAgent)
+module Agent (AgentID, Move(Move, MoveAndDeffuse, Stay),
+    AgentState(AS, asPos, asId), WorldState(WS), AgentAction,
+    AgentFunction, dummyAgent)
 where
 
 import Plane(Coords)
@@ -26,13 +27,13 @@ data WorldState = WS {
     }
     deriving (Show, Eq)
 
-type AgentAction a = (Move, WorldState, Maybe a)
+type AgentAction a = ((Move, Maybe a), WorldState)
 type AgentFunction a = WorldState -> AgentState a -> AgentAction a
 
 dummyAgent :: AgentFunction a
 dummyAgent ws as
-  | x == max && y == max = (Stay, ws, asSpecificData as)
-  | otherwise = (Stay, ws, asSpecificData as)
+  | x == max && y == max = ((Stay, asSpecificData as), ws)
+  | otherwise = ((Stay, asSpecificData as), ws)
     where
       (x, y) = asPos as
       max = asMax as

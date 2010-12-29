@@ -1,12 +1,16 @@
 module Main
 where
 
+import Control.Arrow ((&&&))
+
 import Master
 import Agent
 import Plane
 
+{-
 type AgentTrace = [(Time, AgentID, Coords)]
 type PlaneTrace = [(Time, Plane)]
+--}
 
 data Trace = Trace {
             tTime :: Time,
@@ -18,7 +22,7 @@ getTrace :: World a -> Trace
 getTrace (t, p, ws, as) = Trace t apos
   where
     agents = map snd as
-    apos = map (\x -> (asId x, asPos x)) agents
+    apos = map (asId &&& asPos) agents
 
 getTraces :: Int -> Int -> Int -> Int -> Int -> AgentFunction a -> [Trace]
 getTraces tmax agents size mines seed f = map getTrace ws

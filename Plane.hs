@@ -22,7 +22,7 @@ genMines seed count max
     ys = randomRs (1, max) g2
 
 placeTicks :: [Coords] -> [(Coords, Value)]
-placeTicks bombs = concat $ map placeTickBomb bombs
+placeTicks = concatMap placeTickBomb
 
 placeTickBomb :: Coords -> [(Coords, Value)]
 placeTickBomb (x, y) = [((x + 1, y), 1),
