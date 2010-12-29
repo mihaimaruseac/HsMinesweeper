@@ -1,8 +1,6 @@
 module Main
 where
 
-import Data.DList hiding (map)
-
 import Master
 import Agent
 import Plane
@@ -22,10 +20,10 @@ getTrace (t, p, ws, as) = Trace t apos
     agents = map snd as
     apos = map (\x -> (asId x, asPos x)) agents
 
-getTraces :: Int -> Int -> Int -> Int -> Int -> [Trace]
-getTraces tmax agents size mines seed = map getTrace ws
+getTraces :: Int -> Int -> Int -> Int -> Int -> AgentFunction a -> [Trace]
+getTraces tmax agents size mines seed f = map getTrace ws
   where
-    ws = evolveWorld tmax agents size mines seed
+    ws = evolveWorld tmax agents size mines seed f
 
-main = print $ getTraces 10 2 5 3 42
+main = print $ getTraces 10 2 5 3 42 dummyAgent
 

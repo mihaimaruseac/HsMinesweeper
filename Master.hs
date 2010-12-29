@@ -30,8 +30,8 @@ buildWorld agents size mines seed
 iterateUntil :: (a -> Bool) -> (a -> a) -> a -> [a]
 iterateUntil p f i = takeWhile (not . p) . iterate f $ i
 
-evolveWorld :: Int -> Int -> Int -> Int -> Int -> [World a]
-evolveWorld tmax agents size mines seed
+evolveWorld :: Int -> Int -> Int -> Int -> Int -> AgentFunction a -> [World a]
+evolveWorld tmax agents size mines seed f
   = iterateUntil endOfWorld advanceWorld p0
     where
       p0 = buildWorld agents size mines seed
