@@ -53,8 +53,8 @@ defuse plane positions = (np, planeArray /= np)
     ticks = map (\x -> (x, 1)) neighs
 
 safePlane :: Plane -> Bool
-safePlane p = not (snd p) && (null $ filter (/= 0) $ elems (fst p))
+safePlane p = not (snd p) && null (filter (/= 0) $ elems (fst p))
 
 getTicks :: Plane -> Coords -> Value
-getTicks p c = (fst p) ! c
+getTicks = (!) . fst
 

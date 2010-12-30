@@ -54,20 +54,20 @@ advanceWorld size f (t, p, w, bs, as) = (t+1, p', w', bs', as')
     actionsState = zip (map (asId &&& asPos) activeAgents)
                            (map fst actions)
     later = removeDuplicatesBy notSameDefuse $ filter (\x -> fst x /= t) as
-    notSameDefuse (_, as1) (_, as2) = (asPos as1) == (asPos as2)
+    notSameDefuse (_, as1) (_, as2) = asPos as1 == asPos as2
     as' = concatMap (newSt t size p) actionsState ++ later
     defusedPoss = filter (\c -> getTicks p c > 7) $ map (asPos.snd) later
     p' = defuse p defusedPoss
     agentsDefusing = map (asId.snd &&& asPos.snd) later
     success = map fst $ filter (\(_,y)->y `elem` defusedPoss) agentsDefusing
-    bs' = (map (\x->(x,1)) success) ++ bs
+    bs' = addSuccesses success bs
     w' = foldl1 combineWS $ map snd actions
 
 newSt :: Time -> Int -> Plane -> AgentActivity a -> [AgentActivations a]
 newSt t size pl ((id, p), (Stay, o))
   = [(t + 1, AS p size id (trim $ getTicks pl p) o)]
 newSt t size pl ((id, p), ((Move np), o))
-  = if safe np then [(t + 1, AS np size id (trim $ getTicks pl np) o)] else []
+  = [(t + 1, AS np size id (trim $ getTicks pl np) o) | safe np]
   where
     safe pos = getTicks pl pos < 5
 newSt t size pl ((id, p), ((MoveAndDefuse np), o))
@@ -76,9 +76,16 @@ newSt t size pl ((id, p), ((MoveAndDefuse np), o))
 removeDuplicatesBy :: (Eq a) => (a -> a -> Bool) -> [a] -> [a]
 removeDuplicatesBy f l = filter (not.elemBy f (l \\ nubBy f l)) l
   where
-    elemBy f [] x = False
-    elemBy f (y:ys) x = f x y || elemBy f ys x
+    elemBy f ys x = foldr ((||) . f x) False ys
 
 trim :: Value -> Value
 trim v = if v > 7 then v - 8 else v
+
+addSuccesses :: [AgentID] -> [AgentBombs] -> [AgentBombs]
+addSuccesses a b = nubBy (\x y -> fst x == fst y) $ map (addSuccess b) a ++ b
+
+addSuccess :: [AgentBombs] -> AgentID -> AgentBombs
+addSuccess bs id = case lookup id bs of
+  Nothing -> (id, 1)
+  Just v -> (id, v + 1)
 

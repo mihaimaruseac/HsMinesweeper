@@ -14,12 +14,13 @@ type PlaneTrace = [(Time, Plane)]
 
 data Trace a = Trace {
             tTime :: Time,
-            tAgentPos :: [(AgentID, Coords)]
+            tAgentPos :: [(AgentID, Coords)],
+            tBDefused :: [(AgentID, Int)]
             }
             deriving (Eq, Show)
 
 getTrace :: World a -> Trace a
-getTrace (t, p, ws, bs, as) = Trace t apos
+getTrace (t, p, ws, bs, as) = Trace t apos bs
   where
     agents = map snd as
     apos = map (asId &&& asPos) agents
@@ -30,5 +31,5 @@ getTraces tmax agents size mines seed f = map getTrace ws
   where
     ws = evolveWorld tmax agents size mines seed f
 
-main = print $ (getTraces 10 2 5 3 42 dummyAgent :: [Trace Int])
+main = print (getTraces 16 2 5 3 42 dummyAgent :: [Trace Int])
 
