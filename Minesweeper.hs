@@ -16,15 +16,17 @@ data Trace a = Trace {
             tTime :: Time,
             tAgentPos :: [(AgentID, Coords)],
             tCmd :: [AgentCmd],
-            tBDefused :: [AgentBombs]
+            tBDefused :: [AgentBombs],
+            tBombsRemaining :: [Coords]
             }
             deriving (Eq, Show)
 
 getTrace :: World a -> Trace a
-getTrace (t, p, ws, ac, bs, as) = Trace t apos ac bs
+getTrace (t, p, ws, ac, bs, as) = Trace t apos ac bs tb
   where
     agents = map snd as
     apos = map (asId &&& asPos) agents
+    tb = getBombs p
 
 getTraces :: (Eq a)
   => Time -> Int -> Int -> Int -> Int -> AgentFunction a -> [Trace a]

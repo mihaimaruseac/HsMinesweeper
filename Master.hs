@@ -56,7 +56,7 @@ evolveWorld tmax agents size mines seed f
 advanceWorld size f (t, p, w, ac, bs, as) = (t+1, p', w', ac', bs', as')
   where
     now = filter (\x -> fst x == t) as
-    activeAgents = map snd $ now
+    activeAgents = map snd now
     actions = map (f w) activeAgents
     actionsState = zip (map (asId &&& asPos) activeAgents)
                            (map fst actions)
@@ -69,7 +69,7 @@ advanceWorld size f (t, p, w, ac, bs, as) = (t+1, p', w', ac', bs', as')
     success = map fst $ filter (\(_,y)->y `elem` defusedPoss) agentsDefusing
     bs' = addSuccesses success bs
     w' = foldl1 combineWS $ map snd actions
-    ac' = zip (map (asId . snd) $ now) (map (getCmd.fst.fst) actions)
+    ac' = zip (map (asId . snd) now) (map (getCmd.fst.fst) actions)
 
 getCmd :: Move -> Cmd
 getCmd Stay = CStay

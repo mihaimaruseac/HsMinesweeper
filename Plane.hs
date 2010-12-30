@@ -1,4 +1,5 @@
-module Plane (Plane, Coords, Value, buildPlane, defuse, safePlane, getTicks)
+module Plane (Plane, Coords, Value, buildPlane, defuse, safePlane,
+  getTicks, getBombs)
 where
 
 import Debug.Trace
@@ -53,8 +54,10 @@ defuse plane positions = (np, planeArray /= np)
     ticks = map (\x -> (x, 1)) neighs
 
 safePlane :: Plane -> Bool
-safePlane p = not (snd p) && null (filter (/= 0) $ elems (fst p))
+safePlane p = not (snd p) && null (getBombs p)
 
 getTicks :: Plane -> Coords -> Value
 getTicks = (!) . fst
 
+getBombs :: Plane -> [Coords]
+getBombs = map fst . filter ((>4) . snd) . assocs . fst
