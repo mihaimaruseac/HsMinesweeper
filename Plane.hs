@@ -1,5 +1,5 @@
 module Plane (Plane, Coords, Value, buildPlane, defuse, safePlane,
-  getTicks, getBombs)
+  getTicks, getBombs, neigh)
 where
 
 import Debug.Trace
@@ -47,11 +47,13 @@ defuse plane positions = (np, planeArray /= np)
     np = accum (-) planeArray $ centers ++ ticks
     planeArray = fst plane
     max = snd $ snd $ bounds planeArray
-    neighs = concatMap neigh positions
-    neigh (x, y) = filter (\(x,y) -> x >= 0 && x <= max && y >= 0 && y <= max)
-                     [(x-1, y), (x+1, y), (x, y-1), (x, y+1)]
+    neighs = concatMap (neigh max) positions
     centers = map (\x -> (x, 8)) positions
     ticks = map (\x -> (x, 1)) neighs
+
+neigh :: Int -> Coords -> [Coords]
+neigh max (x, y) = filter (\(x,y) -> x >= 0 && x <= max && y >= 0 && y <= max)
+                   [(x-1, y), (x+1, y), (x, y-1), (x, y+1)]
 
 safePlane :: Plane -> Bool
 safePlane p = not (snd p) && null (getBombs p)

@@ -17,12 +17,13 @@ data Trace a = Trace {
             tAgentPos :: [(AgentID, Coords)],
             tCmd :: [AgentCmd],
             tBDefused :: [AgentBombs],
-            tBombsRemaining :: [Coords]
+            tBombsRemaining :: [Coords],
+            tWS :: WorldState
             }
             deriving (Eq, Show)
 
 getTrace :: World a -> Trace a
-getTrace (t, p, ws, ac, bs, as) = Trace t apos ac bs tb
+getTrace (t, p, ws, ac, bs, as) = Trace t apos ac bs tb ws
   where
     agents = map snd as
     apos = map (asId &&& asPos) agents
@@ -34,5 +35,5 @@ getTraces tmax agents size mines seed f = map getTrace ws
   where
     ws = evolveWorld tmax agents size mines seed f
 
-main = print (getTraces 16 2 5 3 42 dummyAgent :: [Trace Int])
+main = print (getTraces 16 2 5 3 42 intelligentAgent)
 
