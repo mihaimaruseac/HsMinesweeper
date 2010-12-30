@@ -1,4 +1,5 @@
-module Master (Time, AgentActivations, World, evolveWorld)
+module Master (Time, AgentActivations, World, evolveWorld, AgentBombs,
+  Cmd (CStay, CMoveDefuse, CMove), AgentCmd)
 where
 
 import Control.Arrow ((&&&))
@@ -10,26 +11,30 @@ import Debug.Trace
 import Agent
 import Plane
 
+data Cmd = CStay | CMove | CMoveDefuse deriving (Eq, Enum, Show)
+
 type Time = Int
 type AgentActivations a = (Time, AgentState a)
 type AgentBombs = (AgentID, Int)
-type World a = (Time, Plane, WorldState, [AgentBombs], [AgentActivations a])
+type AgentCmd = (AgentID, Cmd)
+type World a = (Time, Plane, WorldState,
+                [AgentCmd], [AgentBombs], [AgentActivations a])
 type AgentActivity a = ((AgentID, Coords), (Move, Maybe a))
 
 buildWorld :: Int -> Int -> Int -> Int -> World a
 buildWorld agents size mines seed
   | size < 5 = error "Field too small"
   | agents == 0 = error "Need at least one agent"
-  | agents == 1 = (0, p, iws, [], [(0, AS (0, 0) size 0 0 Nothing)])
-  | agents == 2 = (0, p, iws, [], [(0, AS (0, 0) size 0 0 Nothing),
-                                   (0, AS (size, size) size 1 0 Nothing)])
-  | agents == 3 = (0, p, iws, [], [(0, AS (0, 0) size 0 0 Nothing),
-                                   (0, AS (0, size) size 1 0 Nothing),
-                                   (0, AS (size, size) size 2 0 Nothing)])
-  | agents == 4 = (0, p, iws, [], [(0, AS (0, 0) size 0 0 Nothing),
-                                   (0, AS (0, size) size 1 0 Nothing),
-                                   (0, AS (size, 0) size 2 0 Nothing),
-                                   (0, AS (size, size) size 3 0 Nothing)])
+  | agents == 1 = (0, p, iws, [], [], [(0, AS (0, 0) size 0 0 Nothing)])
+  | agents == 2 = (0, p, iws, [], [], [(0, AS (0, 0) size 0 0 Nothing),
+                                       (0, AS (size, size) size 1 0 Nothing)])
+  | agents == 3 = (0, p, iws, [], [], [(0, AS (0, 0) size 0 0 Nothing),
+                                       (0, AS (0, size) size 1 0 Nothing),
+                                       (0, AS (size, size) size 2 0 Nothing)])
+  | agents == 4 = (0, p, iws, [], [], [(0, AS (0, 0) size 0 0 Nothing),
+                                       (0, AS (0, size) size 1 0 Nothing),
+                                       (0, AS (size, 0) size 2 0 Nothing),
+                                       (0, AS (size, size) size 3 0 Nothing)])
   | otherwise = error "Too many agents"
   where
     p = buildPlane size mines seed
@@ -38,18 +43,20 @@ buildWorld agents size mines seed
 iterateUntil :: (a -> Bool) -> (a -> a) -> a -> [a]
 iterateUntil p f = (takeWhile (not . p) . iterate f $)
 
-evolveWorld :: (Eq a) => Int -> Int -> Int -> Int -> Int -> AgentFunction a -> [World a]
+--evolveWorld :: (Eq a) =>
+--  Time -> Int -> Int -> Int -> Int -> AgentFunction a -> [World a]
 evolveWorld tmax agents size mines seed f
   = iterateUntil endOfWorld (advanceWorld size f) p0
     where
       p0 = buildWorld agents size mines seed
-      endOfWorld (_, _, _, _, []) = True
-      endOfWorld (t, p, _, _, _) = t > tmax || safePlane p
+      endOfWorld (_, _, _, _, _, []) = True
+      endOfWorld (t, p, _, _, _, _) = t > tmax || safePlane p
 
-advanceWorld :: (Eq a) => Int -> AgentFunction a -> World a -> World a
-advanceWorld size f (t, p, w, bs, as) = (t+1, p', w', bs', as')
+--advanceWorld :: (Eq a) => Int -> AgentFunction a -> World a -> World a
+advanceWorld size f (t, p, w, ac, bs, as) = (t+1, p', w', ac', bs', as')
   where
-    activeAgents = map snd $ filter (\x -> fst x == t) as
+    now = filter (\x -> fst x == t) as
+    activeAgents = map snd $ now
     actions = map (f w) activeAgents
     actionsState = zip (map (asId &&& asPos) activeAgents)
                            (map fst actions)
@@ -62,6 +69,12 @@ advanceWorld size f (t, p, w, bs, as) = (t+1, p', w', bs', as')
     success = map fst $ filter (\(_,y)->y `elem` defusedPoss) agentsDefusing
     bs' = addSuccesses success bs
     w' = foldl1 combineWS $ map snd actions
+    ac' = zip (map (asId . snd) $ now) (map (getCmd.fst.fst) actions)
+
+getCmd :: Move -> Cmd
+getCmd Stay = CStay
+getCmd (Move _) = CMove
+getCmd (MoveAndDefuse _) = CMoveDefuse
 
 newSt :: Time -> Int -> Plane -> AgentActivity a -> [AgentActivations a]
 newSt t size pl ((id, p), (Stay, o))

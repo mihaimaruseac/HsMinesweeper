@@ -15,12 +15,13 @@ type PlaneTrace = [(Time, Plane)]
 data Trace a = Trace {
             tTime :: Time,
             tAgentPos :: [(AgentID, Coords)],
-            tBDefused :: [(AgentID, Int)]
+            tCmd :: [AgentCmd],
+            tBDefused :: [AgentBombs]
             }
             deriving (Eq, Show)
 
 getTrace :: World a -> Trace a
-getTrace (t, p, ws, bs, as) = Trace t apos bs
+getTrace (t, p, ws, ac, bs, as) = Trace t apos ac bs
   where
     agents = map snd as
     apos = map (asId &&& asPos) agents
