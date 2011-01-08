@@ -52,12 +52,11 @@ evolveWorld tmax agents size mines seed f
       endOfWorld (_, _, _, _, _, []) = True
       endOfWorld (t, p, _, _, _, _) = t > tmax || safePlane p
 
-__w0, __w1 :: World a
+__w0, __w1, __w1' :: World a
 __w0 = (0, buildPlane 5 3 42, WS [] [] [] [], [], [], [(0, AS (0, 0) 5 0 False Nothing)])
 __w1 = (0, buildPlane 5 3 42, WS [(1, 0)] [] [(0, 1)] [], [], [], [(0, AS (0, 0) 5 0 True Nothing)])
-__w2, __w3, __w4, __w5, __w6 :: World InteligentState
-__w2 = (0, buildPlane 5 3 42, WS [(0, 3), (1, 2)] [] [(1, 4), (2,3)] [], [], [], [(0, AS (2, 2) 5 0 False (Just (IS [])))])
-__w3 = (0, buildPlane 5 3 42, WS [(0, 3), (1, 2)] [] [(1, 4), (2,3)] [], [], [], [(0, AS (2, 2) 5 0 True (Just (IS [])))])
+__w1' = (0, buildPlane 5 3 42, WS [] [] [] [], [], [], [(0, AS (0, 0) 5 0 False Nothing), (0, AS (5, 5) 5 1 False Nothing)])
+__w4, __w5, __w5' :: World InteligentState
 __w4 = (0, buildPlane 5 3 42, WS [(0, 0), (0, 1), (1, 0), (1, 1)] [] [] [],
         [], [], [(0, AS (0, 2) 5 0 False
         (Just (IS [(0, 3), (0, 4), (0, 5), (1, 5), (1, 4), (1, 3), (1, 2), (1, 1)])))])
@@ -66,11 +65,11 @@ __w5 = (0, buildPlane 5 3 42,
         [] [] [],
         [], [], [(0, AS (0, 4) 5 0 False
         (Just (IS [(0, 5), (1, 5), (1, 4), (1, 3)])))])
-__w6 = (0, buildPlane 5 3 42,
-        WS [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (1, 0), (1, 1), (1, 2), (1, 3), (1, 4)]
+__w5' = (0, buildPlane 5 3 42,
+        WS [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (1, 0), (1, 1), (1, 2), (1, 3)]
         [] [] [],
-        [], [], [(0, AS (0, 5) 5 0 False
-        (Just (IS [(1, 5), (1, 4), (1, 3)])))])
+        [], [], [(0, AS (1, 4) 5 0 False
+        (Just (IS [(1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3), (2, 4), (2, 5)])))])
 
 advanceWorld :: (Eq a) => Int -> AgentFunction a -> World a -> World a
 advanceWorld size f (t, p, w, ac, bs, as) = (t+1, p', w', ac', bs', as')
@@ -88,7 +87,7 @@ advanceWorld size f (t, p, w, ac, bs, as) = (t+1, p', w', ac', bs', as')
     agentsDefusing = map (asId.snd &&& asPos.snd) later
     success = map fst $ filter (\(_,y)->y `elem` defusedPoss) agentsDefusing
     bs' = addSuccesses success bs
-    w' = foldl1 combineWS $ map snd actions
+    w' = foldl combineWS emptyWS $ map snd actions
     ac' = zip (map (asId . snd) now) (map (getCmd.fst.fst) actions)
 
 getCmd :: Move -> Cmd
