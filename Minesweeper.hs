@@ -35,5 +35,5 @@ getTraces tmax agents size mines seed f = map getTrace ws
   where
     ws = evolveWorld tmax agents size mines seed f
 
-main = print (getTraces 16 2 5 3 42 intelligentAgent)
+main = print (getTraces 16 4 5 8 42 intelligentAgent)
 
