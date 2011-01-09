@@ -58,6 +58,8 @@ emptyWS = WS [] []
 
 data InteligentState = IS {} deriving (Show, Eq)
 
+-- sort the neighbors according to some heuristics depending on safe and
+-- unsafe spots
 intelligentAgent :: AgentFunction InteligentState
 intelligentAgent ws@(WS ss ucs) as@(AS p@(x, y) max id tick asd)
   = ((m np, asd), ws')
@@ -83,6 +85,7 @@ intelligentAgent ws@(WS ss ucs) as@(AS p@(x, y) max id tick asd)
     nnx = zip nn (map neighEval nn)
     ws' = WS (ss' ++ [p, np]) (ucs' \\ [p, np])
 
+-- new safe and unsafe spots
 getNewLists :: [Coords]->Bool -> ([Coords], [Coords]) -> ([Coords], [Coords])
 getNewLists neighs True (ss, ucs) = (ss, (ucs ++ neighs) \\ ss)
 getNewLists neighs False (ss, ucs) = let s' = ss ++ neighs in (s', ucs \\ s')

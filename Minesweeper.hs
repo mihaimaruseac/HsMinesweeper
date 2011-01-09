@@ -3,7 +3,9 @@ where
 
 import Control.Arrow ((&&&))
 import Control.Monad.Trans (liftIO)
+import Data.IORef
 import Graphics.UI.Gtk
+import System.Environment (getArgs)
 
 import Agent
 import Master
@@ -19,6 +21,7 @@ data Trace a = Trace {
             }
             deriving (Eq, Show)
 
+-- get output from a run
 getTrace :: World a -> Trace a
 getTrace (t, p, ws, ac, bs, as) = Trace t apos ac bs tb ws
   where
@@ -32,18 +35,17 @@ getTraces tmax agents size mines seed f = map getTrace ws
   where
     ws = evolveWorld tmax agents size mines seed f
 
+-- GUI
 main = do
-  let size = 5
-      traces = getTraces 16 4 size 8 42 intelligentAgent
+  args <- getArgs
+  let maxt:agents:size:bombs:seed:_ = map read args
+      traces = getTraces maxt agents size bombs seed intelligentAgent
       worldSpace = [(x, y) | x <- [0..size], y <- [0..size]]
-  print $ head traces
   initGUI
-  mainWindow (size + 1) worldSpace
+  mainWindow (size + 1) worldSpace traces
 
-mainWindow n worldSpace = do
+mainWindow n worldSpace traces = do
   window <- windowNew
---  widgetSetSizeRequest window 800 600
-  windowMaximize window
   -- nonhomogenous hbox with no spacing
   hBox <- hBoxNew False 10
   -- add it to the window
@@ -58,6 +60,7 @@ mainWindow n worldSpace = do
   vBox <- vBoxNew False 10
   boxPackStart hBox vBox PackNatural 10
   -- first, a single label containing the actual time
+  let max = length traces
   timeLabel <- labelNew $ Just "Time: 0"
   boxPackStart vBox timeLabel PackNatural 10
   -- then, a liststore (aka normal table) showing agent details
@@ -70,14 +73,27 @@ mainWindow n worldSpace = do
   treeViewInsertColumn agentView c2 1
   c3 <- buildAgentColumn "Cmd" agentDetails (\(x, y, z) -> z)
   treeViewInsertColumn agentView c3 2
-  widgetSetSizeRequest agentView 400 400
   boxPackStart vBox agentView PackGrow 10
   -- lastly, a button box for the 3 control buttons
   hbtn <- hButtonBoxNew
   boxPackStart vBox hbtn PackNatural 10
   btnPrev <- buttonNewWithLabel "Previous"
+  refTime <- newIORef 0
+  fillField (traces !! 0) fields worldSpace
+  onClicked btnPrev $ do
+    time <- readIORef refTime
+    let ntime = if time > 0 then time - 1 else time
+    timeLabel `labelSetText` ("Time: " ++ show ntime)
+    fillField (traces !! time) fields worldSpace
+    writeIORef refTime ntime
   boxPackStart hbtn btnPrev PackNatural 5
   btnNext <- buttonNewWithLabel "Next"
+  onClicked btnNext $ do
+    time <- readIORef refTime
+    let ntime = if time < max - 1 then time + 1 else time
+    timeLabel `labelSetText` ("Time: " ++ show ntime)
+    fillField (traces !! time) fields worldSpace
+    writeIORef refTime ntime
   boxPackStart hbtn btnNext PackNatural 5
   btnNew <- buttonNewWithLabel "New"
   boxPackStart hbtn btnNew PackNatural 5
@@ -87,6 +103,17 @@ mainWindow n worldSpace = do
   widgetShowAll window
   -- run GUI loop
   mainGUI
+
+fillField trace fields worldSpace = do
+  mapM_ (updateWorld trace) (zip fields worldSpace)
+
+updateWorld trace (f, (x, y))
+  | (x, y) `elem` poss = imageSetFromFile f "robot.png"
+  | (x, y) `elem` bombs = imageSetFromFile f "bomb.png"
+  | otherwise = imageSetFromFile f "empty.png"
+  where
+    bombs = tBombsRemaining trace
+    poss = map snd $ tAgentPos trace
 
 buildAgentColumn title model f = do
   c <- treeViewColumnNew

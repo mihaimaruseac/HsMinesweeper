@@ -19,6 +19,7 @@ type World a = (Time, Plane, WorldState,
                 [AgentCmd], [AgentBombs], [AgentActivations a])
 type AgentActivity a = (AgentPos, (Move, Maybe a))
 
+-- build the initial world
 buildWorld :: Int -> Int -> Int -> Int -> World a
 buildWorld agents size mines seed
   | size < 5 = error "Field too small"
@@ -50,6 +51,7 @@ evolveWorld tmax agents size mines seed f
       endOfWorld (_, _, _, _, _, []) = True
       endOfWorld (t, p, _, _, _, _) = t > tmax || safePlane p
 
+-- advance world, take care of agent input and state
 advanceWorld :: (Eq a) => Int -> AgentFunction a -> World a -> World a
 advanceWorld size f (t, p, w, ac, bs, as) = (t+1, p', w', ac', bs', as')
   where
