@@ -6,8 +6,6 @@ import Control.Arrow ((&&&))
 import Data.Array
 import Data.List
 
-import Debug.Trace
-
 import Agent
 import Plane
 
@@ -38,7 +36,7 @@ buildWorld agents size mines seed
   | otherwise = error "Too many agents"
   where
     p = buildPlane size mines seed
-    iws = WS [] [] []
+    iws = WS [] []
 
 iterateUntil :: (a -> Bool) -> (a -> a) -> a -> [a]
 iterateUntil p f = (takeWhile (not . p) . iterate f $)

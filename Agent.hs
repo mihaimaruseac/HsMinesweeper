@@ -3,8 +3,6 @@ module Agent (AgentID, Move(Move, MoveAndDefuse, Stay),
     AgentPos, AgentFunction, dummyAgent, combineWS, emptyWS, intelligentAgent)
 where
 
-import Debug.Trace
-
 import Control.Applicative (pure, (<*>))
 import Control.Arrow (first, (&&&))
 import Data.List
@@ -31,8 +29,7 @@ data AgentState a = AS {
 
 data WorldState = WS {
     safeSpots :: [Coords],
-    uncertainSpots :: [Coords],
-    agentPos :: [AgentPos]
+    uncertainSpots :: [Coords]
     }
     deriving (Show, Eq)
 
@@ -51,20 +48,18 @@ dummyAgent ws as
       max = asMax as
 
 combineWS :: WorldState -> WorldState -> WorldState
-combineWS (WS s uc p) (WS s' uc' p')
-  = WS ns nu np
+combineWS (WS s uc) (WS s' uc') = WS ns nu
   where
     ns = nub $ s ++ s'
     nu = (nub $ uc ++ uc') \\ ns
-    np = nubBy (\x y -> fst x == fst y) $ p' ++ p
 
 emptyWS :: WorldState
-emptyWS = WS [] [] []
+emptyWS = WS [] []
 
 data InteligentState = IS {} deriving (Show, Eq)
 
 intelligentAgent :: AgentFunction InteligentState
-intelligentAgent ws@(WS ss ucs ap) as@(AS p@(x, y) max id tick asd)
+intelligentAgent ws@(WS ss ucs) as@(AS p@(x, y) max id tick asd)
   = ((m np, asd), ws')
   where
     -- action
@@ -86,7 +81,7 @@ intelligentAgent ws@(WS ss ucs ap) as@(AS p@(x, y) max id tick asd)
     -- next position and the new world state
     np = last nn
     nnx = zip nn (map neighEval nn)
-    ws' = WS (ss' ++ [p, np]) (ucs' \\ [p, np]) [(id, np)]
+    ws' = WS (ss' ++ [p, np]) (ucs' \\ [p, np])
 
 getNewLists :: [Coords]->Bool -> ([Coords], [Coords]) -> ([Coords], [Coords])
 getNewLists neighs True (ss, ucs) = (ss, (ucs ++ neighs) \\ ss)

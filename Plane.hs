@@ -2,8 +2,6 @@ module Plane (Plane, Coords, Value, buildPlane, defuse, safePlane,
   getTicks, getBombs, neigh)
 where
 
-import Debug.Trace
-
 import Data.Array
 import Data.List
 import System.Random
@@ -63,3 +61,4 @@ getTicks = (!) . fst
 
 getBombs :: Plane -> [Coords]
 getBombs = map fst . filter ((>4) . snd) . assocs . fst
+
